@@ -27,6 +27,9 @@ from GitHub with a manual reload — there is no Web Store release.
 ## Hard constraints
 
 - **Vanilla TypeScript only.** No React, no framework, no UI library.
+- **System font stack only.** No `@font-face`, no Google Fonts or other font
+  loading, no bundled font files — use the OS default via CSS (e.g.
+  `font-family: system-ui, sans-serif`).
 - **No bundler.** Plain `tsc`; `manifest.json` points directly at `dist/*.js`.
 - **No runtime npm dependencies.** Only `typescript` and `@types/chrome` as
   devDependencies. Adding one reopens the no-bundler decision (spec §7).
