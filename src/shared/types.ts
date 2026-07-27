@@ -22,9 +22,3 @@ export interface MeetingSession {
   /** Optional, for future Tempo mapping. Not required in phase 1. */
   projectTag: string | null;
 }
-
-/** Fields a user may edit by hand in the history view. */
-export type EditableSessionFields = Pick<
-  MeetingSession,
-  'startTime' | 'endTime' | 'title' | 'projectTag'
->;
