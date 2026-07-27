@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "MeetWM",
+  "version": "0.1.0",
+  "description": "Logs your own join/leave times on Google Meet calls, locally.",
+  "permissions": ["storage", "activeTab"],
+  "action": {
+    "default_title": "MeetWM",
+    "default_popup": "src/popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://meet.google.com/*"],
+      "js": ["dist/content/meet-tracker.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/shared/*.js"],
+      "matches": ["*://meet.google.com/*"]
+    }
+  ]
+}
