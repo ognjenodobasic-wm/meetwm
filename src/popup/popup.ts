@@ -1,4 +1,9 @@
-import type { SessionGroup } from '../shared/grouping.js';
+import {
+  groupSessionsByCode,
+  formatDuration,
+  type GroupedMeeting,
+} from '../shared/grouping.js';
+import { getAllSessions } from '../shared/storage.js';
 
 /**
  * Toolbar popup — spec §5. Today only, accordion grouped by `meetingCode`.
@@ -7,14 +12,174 @@ import type { SessionGroup } from '../shared/grouping.js';
  * holds rendering only — no second copy of that logic.
  */
 
-/** TODO(phase 1): read today's sessions, group them, render the accordion. */
-export function render(_root: HTMLElement, _groups: SessionGroup[]): void {
-  // TODO
+const MONTHS = [
+  'jan', 'feb', 'mar', 'apr', 'maj', 'jun',
+  'jul', 'avg', 'sep', 'okt', 'nov', 'dec',
+];
+
+let openMeetingCode: string | null = null;
+
+function todayDateKey(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
-/** TODO(phase 1): load today's sessions, group them via shared/grouping, render. */
+function formatHeaderDate(): string {
+  const now = new Date();
+  return `${now.getDate()}. ${MONTHS[now.getMonth()]} ${now.getFullYear()}.`;
+}
+
+function formatTime(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
+
+function groupWarningLabel(group: GroupedMeeting): string | null {
+  if (group.sessions.some((s) => s.status === 'in-progress')) return 'u toku';
+  if (group.sessions.some((s) => s.status === 'incomplete')) return 'nezavršeno';
+  return null;
+}
+
+function totalCompletedMs(groups: GroupedMeeting[]): number {
+  return groups
+    .flatMap((group) => group.sessions)
+    .filter((s) => s.status === 'completed')
+    .reduce((sum, s) => sum + (s.session.endTime! - s.session.startTime), 0);
+}
+
+function renderHeader(): HTMLElement {
+  const header = document.createElement('div');
+  header.className = 'header';
+
+  const left = document.createElement('div');
+  const icon = document.createElement('span');
+  icon.className = 'header-icon';
+  icon.textContent = '🕘';
+  const title = document.createElement('strong');
+  title.textContent = 'MeetWM';
+  left.append(icon, title);
+
+  const date = document.createElement('span');
+  date.className = 'header-date';
+  date.textContent = formatHeaderDate();
+
+  header.append(left, date);
+  return header;
+}
+
+function renderSessionRow(s: GroupedMeeting['sessions'][number]): HTMLElement {
+  const row = document.createElement('div');
+  row.className = 'session-row';
+
+  const range = document.createElement('span');
+  range.textContent =
+    s.session.endTime === null
+      ? `${formatTime(s.session.startTime)} –`
+      : `${formatTime(s.session.startTime)} – ${formatTime(s.session.endTime)}`;
+
+  const right = document.createElement('span');
+  if (s.session.endTime === null) {
+    right.className = 'session-duration is-warning';
+    right.textContent = s.status === 'in-progress' ? 'u toku' : 'nezavršeno';
+  } else {
+    right.className = 'session-duration';
+    right.textContent = formatDuration(s.session.endTime - s.session.startTime);
+  }
+
+  row.append(range, right);
+  return row;
+}
+
+function renderGroup(group: GroupedMeeting): HTMLElement {
+  const isOpen = group.meetingCode === openMeetingCode;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = isOpen ? 'group is-open' : 'group';
+
+  const row = document.createElement('div');
+  row.className = 'group-row';
+  row.addEventListener('click', () => {
+    openMeetingCode = isOpen ? null : group.meetingCode;
+    void renderApp();
+  });
+
+  const left = document.createElement('span');
+  const chevron = document.createElement('span');
+  chevron.className = 'chevron';
+  chevron.textContent = isOpen ? '▾' : '▸';
+  const title = document.createElement('span');
+  title.className = 'group-title';
+  title.textContent = group.title;
+  left.append(chevron, title);
+
+  const meta = document.createElement('span');
+  const warning = groupWarningLabel(group);
+  if (warning !== null) {
+    meta.className = 'group-meta is-warning';
+    meta.textContent = warning;
+  } else {
+    meta.className = 'group-meta';
+    meta.textContent = `${group.uiLabel} (${group.sessionCount})`;
+  }
+
+  row.append(left, meta);
+  wrapper.append(row);
+
+  const sessions = document.createElement('div');
+  sessions.className = 'sessions';
+  for (const s of group.sessions) {
+    sessions.append(renderSessionRow(s));
+  }
+  wrapper.append(sessions);
+
+  return wrapper;
+}
+
+function renderFooter(groups: GroupedMeeting[]): HTMLElement {
+  const footer = document.createElement('div');
+  footer.className = 'footer';
+
+  const link = document.createElement('a');
+  link.className = 'footer-link';
+  link.href = '#';
+  link.textContent = 'više informacija →';
+  link.addEventListener('click', (event) => {
+    event.preventDefault();
+    void chrome.tabs.create({ url: chrome.runtime.getURL('src/history/history.html') });
+  });
+
+  const total = document.createElement('span');
+  total.className = 'footer-total';
+  total.textContent = formatDuration(totalCompletedMs(groups));
+
+  footer.append(link, total);
+  return footer;
+}
+
+async function renderApp(): Promise<void> {
+  const app = document.getElementById('app');
+  if (app === null) return;
+
+  const sessions = await getAllSessions();
+  const todaySessions = sessions.filter((s) => s.dateKey === todayDateKey());
+  const groups = groupSessionsByCode(todaySessions);
+
+  app.replaceChildren();
+  app.append(renderHeader());
+  for (const group of groups) {
+    app.append(renderGroup(group));
+    const separator = document.createElement('hr');
+    separator.className = 'separator';
+    app.append(separator);
+  }
+  app.append(renderFooter(groups));
+}
+
 export function init(): void {
-  // TODO
+  document.addEventListener('DOMContentLoaded', () => void renderApp());
 }
 
 init();

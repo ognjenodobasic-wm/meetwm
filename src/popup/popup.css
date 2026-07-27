@@ -1,48 +1,117 @@
-/* Shared stylesheet for both extension surfaces (popup + history). */
-
 :root {
   --fg: #1f1f1f;
   --fg-muted: #5f6368;
   --bg: #ffffff;
+  --bg-open: #f1f3f4;
   --border: #dadce0;
   --warn: #b3261e;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 14px;
 }
 
 body {
   margin: 0;
+  width: 360px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 14px;
   color: var(--fg);
   background: var(--bg);
 }
 
-body.popup {
-  width: 340px;
-}
-
-.header h1 {
-  margin: 0;
-  padding: 12px;
-  font-size: 15px;
-  font-weight: 600;
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--border);
 }
 
-.groups {
-  padding: 4px 0;
+.header-icon {
+  margin-right: 8px;
+}
+
+.header-date {
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.group {
+  background: var(--bg);
+}
+
+.group.is-open {
+  background: var(--bg-open);
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.group-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.group-meta {
+  flex-shrink: 0;
+  color: var(--fg-muted);
+  font-size: 13px;
+}
+
+.group-meta.is-warning {
+  color: var(--warn);
+}
+
+.chevron {
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.group:not(.is-open) .sessions {
+  display: none;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px 6px 32px;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.session-duration.is-warning {
+  color: var(--warn);
+}
+
+.separator {
+  width: 100%;
+  height: 1px;
+  margin: 0;
+  border: none;
+  background: var(--border);
 }
 
 .footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   padding: 10px 12px;
   border-top: 1px solid var(--border);
   font-size: 13px;
 }
 
-.footer a {
+.footer-link {
   color: var(--fg-muted);
   text-decoration: none;
 }
 
-.unfinished {
-  color: var(--warn);
+.footer-total {
+  font-weight: 600;
 }

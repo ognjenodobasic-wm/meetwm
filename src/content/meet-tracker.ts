@@ -7,7 +7,7 @@
  * come in through inline `import(...)` type positions, which erase completely.
  * Shared helpers are pulled in at runtime:
  *
- *   const { appendSession } = await import(
+ *   const { saveSession } = await import(
  *     chrome.runtime.getURL('dist/shared/storage.js')
  *   );
  *
@@ -20,45 +20,92 @@
 
 type MeetingSession = import('../shared/types.js').MeetingSession;
 
+const storageUrl = chrome.runtime.getURL('dist/shared/storage.js');
+
 /** The session currently being recorded, if any. */
 let activeSession: MeetingSession | null = null;
+let wasInCall = false;
 
-/**
- * TODO(phase 1): true only while actually in the call — detect a DOM signal
- * such as the "Leave call" button. An open lobby tab is NOT an active session.
- */
+/** True only while the "Leave call" button is present in the DOM. */
 function isInCall(): boolean {
+  for (const btn of document.querySelectorAll('button')) {
+    const label = btn.getAttribute('aria-label');
+    if (label && label.toLowerCase().includes('leave call')) {
+      return true;
+    }
+  }
   return false;
 }
 
-/** TODO(phase 1): meet.google.com/xxx-xxxx-xxx → "xxx-xxxx-xxx". */
+/** meet.google.com/xxx-xxxx-xxx → "xxx-xxxx-xxx". */
 function currentMeetingCode(): string | null {
-  return null;
+  const parts = window.location.pathname.split('/').filter(Boolean);
+  return parts[0] || null;
 }
 
-/** TODO(phase 1): open a session on first "in call" detection and persist it. */
+/** "YYYY-MM-DD" in local time, for `MeetingSession.dateKey`. */
+function dateKeyFor(timestamp: number): string {
+  const d = new Date(timestamp);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function makeId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/** Open a session on first "in call" detection and persist it. */
 async function handleJoin(): Promise<void> {
   if (activeSession !== null) return;
   const meetingCode = currentMeetingCode();
   if (meetingCode === null) return;
-  // TODO: build the MeetingSession and appendSession() it.
+
+  const { saveSession } = await import(storageUrl);
+  const now = Date.now();
+
+  const session: MeetingSession = {
+    id: makeId(),
+    meetingCode,
+    startTime: now,
+    endTime: null,
+    dateKey: dateKeyFor(now),
+    title: document.title || null,
+    projectTag: null,
+  };
+
+  activeSession = session;
+  await saveSession(session);
 }
 
-/**
- * TODO(phase 1): close the session on leave button, tab close, or navigation
- * away. A session that never gets here stays `endTime: null` on purpose —
- * never guess a duration (spec §7).
- */
+/** Close the session on leave button, tab close, or navigation away. */
 async function handleLeave(): Promise<void> {
   if (activeSession === null) return;
-  // TODO: set endTime and updateSession().
+  const { updateSession } = await import(storageUrl);
+  await updateSession(activeSession.id, { endTime: Date.now() });
   activeSession = null;
 }
 
-/** TODO(phase 1): observe the DOM and drive handleJoin / handleLeave. */
+function checkState(): void {
+  const inCall = isInCall();
+  if (!wasInCall && inCall) {
+    void handleJoin();
+  } else if (wasInCall && !inCall) {
+    void handleLeave();
+  }
+  wasInCall = inCall;
+}
+
+/** Observe the DOM and drive handleJoin / handleLeave. */
 function start(): void {
-  if (isInCall()) void handleJoin();
-  window.addEventListener('pagehide', () => void handleLeave());
+  checkState();
+  const observer = new MutationObserver(() => checkState());
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener('beforeunload', () => void handleLeave());
 }
 
 start();

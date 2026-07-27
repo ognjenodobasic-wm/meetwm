@@ -1,0 +1,103 @@
+:root {
+  --fg: #1f1f1f;
+  --fg-muted: #5f6368;
+  --bg: #ffffff;
+  --border: #dadce0;
+  --warn: #b3261e;
+}
+
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  color: var(--fg);
+  background: var(--bg);
+}
+
+.group {
+  border-bottom: 1px solid var(--border);
+}
+
+.group-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.group-title {
+  flex: 1;
+  font-weight: 600;
+}
+
+.group-meta {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.group-meta.is-warning {
+  color: var(--warn);
+}
+
+.chevron {
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+
+.group.is-open .chevron {
+  transform: rotate(180deg);
+}
+
+.sessions {
+  display: none;
+  padding: 0 12px 10px;
+}
+
+.group.is-open .sessions {
+  display: block;
+}
+
+.session-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+
+.session-duration.is-warning {
+  color: var(--warn);
+}
+
+.separator {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 6px 0;
+}
+
+.period-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-bar {
+  padding: 8px 12px;
+}
+
+.session-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.export-button {
+  margin: 12px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
