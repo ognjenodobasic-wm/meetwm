@@ -251,8 +251,12 @@ export async function init(): Promise<void> {
     const sessions = await getAllSessions();
     const filtered = filterSessions(sessions, preset, periodOffset);
     const text = exportSessions(filtered);
-    await navigator.clipboard.writeText(text);
-    exportBtn.textContent = 'Copied!';
+    try {
+      await navigator.clipboard.writeText(text);
+      exportBtn.textContent = 'Copied!';
+    } catch {
+      exportBtn.textContent = 'Copy failed';
+    }
     setTimeout(() => { exportBtn.textContent = 'Export'; }, 1500);
   });
 
