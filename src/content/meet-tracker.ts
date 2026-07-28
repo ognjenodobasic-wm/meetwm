@@ -93,6 +93,18 @@ async function handleLeave(): Promise<void> {
   activeSession = null;
 }
 
+/**
+ * Best-effort synchronous endTime write for abrupt termination paths
+ * (pagehide, visibilitychange→hidden). Does a direct set on the already-saved
+ * session key without a prior read, so no await is needed.
+ */
+function flushLeaveSync(): void {
+  if (activeSession === null) return;
+  const endTime = Date.now();
+  chrome.storage.local.set({ [`session:${activeSession.id}`]: { ...activeSession, endTime } });
+  activeSession = null;
+}
+
 function checkState(): void {
   const inCall = isInCall();
   if (!wasInCall && inCall) {
@@ -108,6 +120,10 @@ function start(): void {
   checkState();
   const observer = new MutationObserver(() => checkState());
   observer.observe(document.body, { childList: true, subtree: true });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') flushLeaveSync();
+  });
+  window.addEventListener('pagehide', () => flushLeaveSync());
   window.addEventListener('beforeunload', () => void handleLeave());
 }
 
