@@ -58,7 +58,7 @@ h1 {
 
 .sessions {
   display: none;
-  padding: 0 12px 10px;
+  padding: 0 12px 10px 32px;
 }
 
 .group.is-open .sessions {
