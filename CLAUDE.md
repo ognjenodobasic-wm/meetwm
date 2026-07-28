@@ -8,7 +8,7 @@ MeetWM — Chrome Manifest V3 extension that logs the user's own join/leave time
 Google Meet calls to `chrome.storage.local`, and shows them in a toolbar popup
 (today) and a full-page history view (day/week/month, manual edits, export).
 
-Authoritative spec: `MEETWM-SPEC-v1.3.md`. Read it before changing behaviour —
+Authoritative spec: `docs/MEETWM-SPEC-v1.3.md`. Read it before changing behaviour —
 section refs (§3 data model, §4 detection, §5 UI, §7 decisions) are cited in code
 comments. No backend, no auth, single user, local only.
 
@@ -63,10 +63,7 @@ formatting in either surface is a defect, not a shortcut.
 repeated `meetingCode` rows in storage — a fixed team link is legitimately reused
 for different meetings the same day. Grouping is view-layer only.
 
-**Never guess a duration.** `endTime: null` means the session was never closed
-cleanly; show it flagged and let the user fix it. Duration is never stored — it is
-computed from `startTime`/`endTime` at display time, `Xh Ym` for the UI and decimal
-hours for export.
+**Never guess a duration.** `endTime: null` splits into two display states based on whether `dateKey` is today: "in progress" (today, no endTime yet — active call, no error styling) or "unfinished" (an earlier day, no endTime — flag it, user must fix manually). This split is view-layer only, in `grouping.ts`; the stored session record is identical in both cases. Duration is never stored — it is computed from `startTime`/`endTime` at display time, `Xh Ym` for the UI and decimal hours for export.
 
 **The content script is not an ES module.** MV3 content scripts load as classic
 scripts, so `src/content/meet-tracker.ts` must emit no top-level `import`/`export`
