@@ -82,6 +82,8 @@ Google UI change with no warning; keep the detection surface small and isolated 
 
 Dev-only seed/clear utility lives inside the popup as a collapsed dev bar (toggle icon in the header), backed by `seedDummyData`/`clearAllData` in `src/dev/seed.ts` — no standalone page anymore.
 
+**`popup.html` has no static markup** — the entire popup UI (header, groups, dev bar, notification toggle) is rendered dynamically by `popup.ts`. New header/UI elements go in `popup.ts`'s render functions, not `popup.html`.
+
 ## Permissions
 
 `storage` + `activeTab` only. The broader `tabs` permission is not needed — the
