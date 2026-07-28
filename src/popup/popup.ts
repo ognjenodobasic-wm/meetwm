@@ -70,13 +70,19 @@ function renderHeader(): HTMLElement {
   date.className = 'header-date';
   date.textContent = formatHeaderDate();
 
+  const notifToggle = document.createElement('button');
+  notifToggle.id = 'notif-toggle';
+  notifToggle.className = 'notif-toggle';
+  notifToggle.setAttribute('aria-label', 'Toggle notifications');
+  notifToggle.textContent = '🔔';
+
   const devToggle = document.createElement('button');
   devToggle.id = 'dev-toggle';
   devToggle.className = 'dev-toggle';
   devToggle.setAttribute('aria-label', 'Dev tools');
   devToggle.textContent = '⚙';
 
-  right.append(date, devToggle);
+  right.append(date, notifToggle, devToggle);
 
   header.append(left, right);
   return header;
