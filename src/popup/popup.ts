@@ -4,7 +4,7 @@ import {
   type GroupedMeeting,
 } from '../shared/grouping.js';
 import { clearAllData, seedDummyData } from '../dev/seed.js';
-import { getAllSessions } from '../shared/storage.js';
+import { getAllSessions, getNotificationsEnabled, setNotificationsEnabled } from '../shared/storage.js';
 
 /**
  * Toolbar popup — spec §5. Today only, accordion grouped by `meetingCode`.
@@ -237,6 +237,18 @@ function wireDevBar(): void {
   });
 }
 
+async function wireNotifToggle(): Promise<void> {
+  const btn = document.getElementById('notif-toggle');
+  if (!(btn instanceof HTMLButtonElement)) return;
+  const enabled = await getNotificationsEnabled();
+  btn.classList.toggle('is-off', !enabled);
+  btn.addEventListener('click', async () => {
+    const next = btn.classList.contains('is-off');
+    await setNotificationsEnabled(next);
+    btn.classList.toggle('is-off', !next);
+  });
+}
+
 async function renderApp(): Promise<void> {
   const app = document.getElementById('app');
   if (app === null) return;
@@ -256,6 +268,7 @@ async function renderApp(): Promise<void> {
   }
   app.append(renderFooter(groups));
   wireDevBar();
+  await wireNotifToggle();
 }
 
 export function init(): void {
