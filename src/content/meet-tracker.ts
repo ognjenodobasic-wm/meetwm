@@ -86,7 +86,10 @@ async function handleJoin(): Promise<void> {
 async function handleLeave(): Promise<void> {
   if (activeSession === null) return;
   const { updateSession } = await import(storageUrl);
-  await updateSession(activeSession.id, { endTime: Date.now() });
+  const endTime = Date.now();
+  const durationMs = endTime - activeSession.startTime;
+  await updateSession(activeSession.id, { endTime });
+  chrome.runtime.sendMessage({ type: 'MEETING_ENDED', durationMs }).catch(() => {});
   activeSession = null;
 }
 
