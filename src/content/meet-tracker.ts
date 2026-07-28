@@ -26,8 +26,23 @@ const storageUrl = chrome.runtime.getURL('dist/shared/storage.js');
 let activeSession: MeetingSession | null = null;
 let wasInCall = false;
 
-/** True only while the "Leave call" button is present in the DOM. */
+/**
+ * True only while the in-call controls are present in the DOM.
+ *
+ * Primary: language-neutral selector — the leave/hangup button is identified
+ * by `[data-tooltip-id]` on a button that also has the red-hangup icon
+ * container (`[jsname="CQylAd"]`). This avoids dependency on UI language.
+ *
+ * Fallback: aria-label text match ("leave call") for any locale that uses
+ * that exact string, and for resilience against jsname changes.
+ *
+ * WARNING (spec §7): Meet's DOM is not a stable contract. Both selectors
+ * must be re-validated after Google UI changes.
+ */
 function isInCall(): boolean {
+  if (document.querySelector('[jsname="CQylAd"]') !== null) {
+    return true;
+  }
   for (const btn of document.querySelectorAll('button')) {
     const label = btn.getAttribute('aria-label');
     if (label && label.toLowerCase().includes('leave call')) {
