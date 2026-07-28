@@ -80,6 +80,8 @@ scripts, so `src/content/meet-tracker.ts` must emit no top-level `import`/`expor
 Google UI change with no warning; keep the detection surface small and isolated in
 `meet-tracker.ts`.
 
+`src/dev/seed.html` + `seed.ts` is a dev-only utility to seed/clear example sessions in `chrome.storage.local` — not linked from `manifest.json`, not a production surface, opened manually via `chrome-extension://<id>/dev/seed.html`.
+
 ## Permissions
 
 `storage` + `activeTab` only. The broader `tabs` permission is not needed — the
