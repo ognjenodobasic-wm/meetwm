@@ -3,6 +3,12 @@
 All notable changes to MeetWM.
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows [SemVer](https://semver.org/).
 
+## 28. jul 2026.
+
+- Task #1 (`0a5331b`), Task #2 (`d5c7bf9`), Task #3 (`d41092f`).
+- Task #4 (`9b582e9`), Task #5 (`d900605`), Task #6 (`9162637`).
+- Task #7 (`d0132ff`), Task #8 (`79bc66d`).
+
 ## 27. jul 2026.
 
 ### Added
