@@ -15,6 +15,11 @@ import { getAllSessions, updateSession } from '../shared/storage.js';
 
 export type RangePreset = 'day' | 'week' | 'month';
 
+const MONTHS = [
+  'jan', 'feb', 'mar', 'apr', 'maj', 'jun',
+  'jul', 'avg', 'sep', 'okt', 'nov', 'dec',
+];
+
 function dateKeyFor(timestamp: number): string {
   const d = new Date(timestamp);
   const y = d.getFullYear();
@@ -23,22 +28,48 @@ function dateKeyFor(timestamp: number): string {
   return `${y}-${m}-${day}`;
 }
 
-function getRange(preset: RangePreset): { from: string; to: string } {
-  const now = new Date();
+/** The date `offset` units (of `preset`'s kind) back from today. */
+function referenceDateFor(preset: RangePreset, offset: number): Date {
+  const ref = new Date();
+  if (preset === 'day') ref.setDate(ref.getDate() - offset);
+  else if (preset === 'week') ref.setDate(ref.getDate() - offset * 7);
+  else ref.setMonth(ref.getMonth() - offset);
+  return ref;
+}
+
+function periodBounds(preset: RangePreset, referenceDate: Date): { from: Date; to: Date } {
   if (preset === 'day') {
-    const dk = dateKeyFor(now.getTime());
-    return { from: dk, to: dk };
+    return { from: referenceDate, to: referenceDate };
   }
   if (preset === 'week') {
-    const day = now.getDay();
-    const diff = now.getDate() - day + (day === 0 ? -6 : 1);
-    const mon = new Date(now.getFullYear(), now.getMonth(), diff);
+    const day = referenceDate.getDay();
+    const diff = referenceDate.getDate() - day + (day === 0 ? -6 : 1);
+    const mon = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), diff);
     const sun = new Date(mon.getTime() + 6 * 24 * 60 * 60 * 1000);
-    return { from: dateKeyFor(mon.getTime()), to: dateKeyFor(sun.getTime()) };
+    return { from: mon, to: sun };
   }
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
-  const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return { from: dateKeyFor(first.getTime()), to: dateKeyFor(last.getTime()) };
+  const first = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+  const last = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 0);
+  return { from: first, to: last };
+}
+
+function getRange(preset: RangePreset, referenceDate: Date): { from: string; to: string } {
+  const { from, to } = periodBounds(preset, referenceDate);
+  return { from: dateKeyFor(from.getTime()), to: dateKeyFor(to.getTime()) };
+}
+
+function formatPeriodLabel(preset: RangePreset, referenceDate: Date): string {
+  const { from, to } = periodBounds(preset, referenceDate);
+  if (preset === 'day') {
+    return `${from.getDate()}. ${MONTHS[from.getMonth()]} ${from.getFullYear()}.`;
+  }
+  if (from.getFullYear() === to.getFullYear() && from.getMonth() === to.getMonth()) {
+    return `${from.getDate()}–${to.getDate()}. ${MONTHS[from.getMonth()]} ${from.getFullYear()}.`;
+  }
+  if (from.getFullYear() === to.getFullYear()) {
+    return `${from.getDate()}. ${MONTHS[from.getMonth()]} – ${to.getDate()}. ${MONTHS[to.getMonth()]} ${to.getFullYear()}.`;
+  }
+  return `${from.getDate()}. ${MONTHS[from.getMonth()]} ${from.getFullYear()}. – ${to.getDate()}. ${MONTHS[to.getMonth()]} ${to.getFullYear()}.`;
 }
 
 function sessionDurationMs(session: MeetingSession): number | null {
@@ -47,11 +78,15 @@ function sessionDurationMs(session: MeetingSession): number | null {
 }
 
 let openGroupIndex = -1;
+let periodOffset = 0;
 
 function renderTabs(
   root: HTMLElement,
   current: RangePreset,
+  referenceDate: Date,
   onChange: (p: RangePreset) => void,
+  onPrev: () => void,
+  onNext: () => void,
 ): void {
   root.innerHTML = '';
   const wrap = document.createElement('div');
@@ -65,6 +100,22 @@ function renderTabs(
     btn.addEventListener('click', () => onChange(p));
     wrap.appendChild(btn);
   }
+
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'period-nav';
+  prevBtn.textContent = '←';
+  prevBtn.addEventListener('click', () => onPrev());
+
+  const label = document.createElement('span');
+  label.className = 'period-label';
+  label.textContent = formatPeriodLabel(current, referenceDate);
+
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'period-nav';
+  nextBtn.textContent = '→';
+  nextBtn.addEventListener('click', () => onNext());
+
+  wrap.append(prevBtn, label, nextBtn);
   root.appendChild(wrap);
 }
 
@@ -162,8 +213,12 @@ export function render(root: HTMLElement, groups: GroupedMeeting[]): void {
   renderGroups(root, groups);
 }
 
-function filterSessions(sessions: MeetingSession[], preset: RangePreset): MeetingSession[] {
-  const { from, to } = getRange(preset);
+function filterSessions(
+  sessions: MeetingSession[],
+  preset: RangePreset,
+  offset: number,
+): MeetingSession[] {
+  const { from, to } = getRange(preset, referenceDateFor(preset, offset));
   return sessions.filter((s) => s.dateKey >= from && s.dateKey <= to);
 }
 
@@ -194,7 +249,7 @@ export async function init(): Promise<void> {
   exportBtn.textContent = 'Export';
   exportBtn.addEventListener('click', async () => {
     const sessions = await getAllSessions();
-    const filtered = filterSessions(sessions, preset);
+    const filtered = filterSessions(sessions, preset, periodOffset);
     const text = exportSessions(filtered);
     await navigator.clipboard.writeText(text);
     exportBtn.textContent = 'Copied!';
@@ -207,13 +262,29 @@ export async function init(): Promise<void> {
 
   const doRender = async () => {
     const sessions = await getAllSessions();
-    const filtered = filterSessions(sessions, preset);
+    const filtered = filterSessions(sessions, preset, periodOffset);
     const groups = groupSessionsByCode(filtered);
-    renderTabs(rangeNav, preset, async (p) => {
-      preset = p;
-      openGroupIndex = -1;
-      await doRender();
-    });
+    renderTabs(
+      rangeNav,
+      preset,
+      referenceDateFor(preset, periodOffset),
+      async (p) => {
+        preset = p;
+        periodOffset = 0;
+        openGroupIndex = -1;
+        await doRender();
+      },
+      async () => {
+        periodOffset += 1;
+        openGroupIndex = -1;
+        await doRender();
+      },
+      async () => {
+        periodOffset = Math.max(0, periodOffset - 1);
+        openGroupIndex = -1;
+        await doRender();
+      },
+    );
     renderGroups(app, groups);
   };
 
