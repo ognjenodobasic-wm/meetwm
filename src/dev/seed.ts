@@ -1,8 +1,6 @@
 import { getAllSessions, saveSession } from '../shared/storage.js';
 import type { MeetingSession } from '../shared/types.js';
 
-const SESSIONS_KEY = 'sessions';
-
 function dateKeyFromDate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
@@ -134,7 +132,9 @@ export async function seedDummyData(): Promise<void> {
 
   const existing = await getAllSessions();
   if (existing.length > 0) {
-    await chrome.storage.local.remove(SESSIONS_KEY);
+    const all = await chrome.storage.local.get(null);
+    const sessionKeys = Object.keys(all).filter(k => k.startsWith('session:'));
+    if (sessionKeys.length > 0) await chrome.storage.local.remove(sessionKeys);
   }
 
   for (const session of sessions) {
@@ -143,5 +143,7 @@ export async function seedDummyData(): Promise<void> {
 }
 
 export async function clearAllData(): Promise<void> {
-  await chrome.storage.local.remove(SESSIONS_KEY);
+  const all = await chrome.storage.local.get(null);
+  const sessionKeys = Object.keys(all).filter(k => k.startsWith('session:'));
+  if (sessionKeys.length > 0) await chrome.storage.local.remove(sessionKeys);
 }
