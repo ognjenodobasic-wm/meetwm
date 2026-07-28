@@ -11,6 +11,41 @@ function makeId(): string {
   return crypto.randomUUID();
 }
 
+const MEETING_POOL: { meetingCode: string; title: string; projectTag: string }[] = [
+  { meetingCode: 'alpha-sync', title: 'Daily Standup', projectTag: 'Ops' },
+  { meetingCode: 'client-demo', title: 'Client Demo', projectTag: 'Client' },
+  { meetingCode: 'eng-review', title: 'Engineering Review', projectTag: 'Eng' },
+  { meetingCode: 'weekly-sync', title: 'Weekly Sync', projectTag: 'Ops' },
+  { meetingCode: 'retro-room', title: 'Sprint Retrospective', projectTag: 'Team' },
+  { meetingCode: 'roadmap-plan', title: 'Q3 Roadmap Planning: budget, hiring, and scope', projectTag: 'Core' },
+];
+
+function randomInt(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function randomHistoricalSession(now: Date): MeetingSession {
+  const pick = MEETING_POOL[randomInt(0, MEETING_POOL.length - 1)]!;
+  const daysAgo = randomInt(1, 90);
+  const day = new Date(now);
+  day.setDate(now.getDate() - daysAgo);
+  day.setHours(randomInt(8, 17), randomInt(0, 59), 0, 0);
+
+  const startTime = day.getTime();
+  const durationMs = randomInt(5, 90) * 60_000;
+  const endTime = startTime + durationMs;
+
+  return {
+    id: makeId(),
+    meetingCode: pick.meetingCode,
+    title: pick.title,
+    projectTag: pick.projectTag,
+    startTime,
+    endTime,
+    dateKey: dateKeyFromDate(day),
+  };
+}
+
 export async function seedDummyData(): Promise<void> {
   const now = new Date();
   const today = dateKeyFromDate(now);
@@ -92,6 +127,10 @@ export async function seedDummyData(): Promise<void> {
       dateKey: twoDaysAgo,
     },
   ];
+
+  for (let i = 0; i < 100; i++) {
+    sessions.push(randomHistoricalSession(now));
+  }
 
   const existing = await getAllSessions();
   if (existing.length > 0) {
