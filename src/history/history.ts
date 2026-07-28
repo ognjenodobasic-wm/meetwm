@@ -79,6 +79,8 @@ function sessionDurationMs(session: MeetingSession): number | null {
 
 let openGroupIndex = -1;
 let periodOffset = 0;
+let openEditSessionId: string | null = null;
+let refreshHistory: (() => Promise<void>) | null = null;
 
 function renderTabs(
   root: HTMLElement,
@@ -89,20 +91,24 @@ function renderTabs(
   onNext: () => void,
 ): void {
   root.innerHTML = '';
-  const wrap = document.createElement('div');
-  wrap.className = 'period-tabs';
+
+  const segGroup = document.createElement('div');
+  segGroup.className = 'seg-group';
   const presets: RangePreset[] = ['day', 'week', 'month'];
   const labels: Record<RangePreset, string> = { day: 'Day', week: 'Week', month: 'Month' };
   for (const p of presets) {
     const btn = document.createElement('button');
-    btn.className = p === current ? 'period-tab is-active' : 'period-tab';
+    btn.className = p === current ? 'seg active' : 'seg';
     btn.textContent = labels[p];
     btn.addEventListener('click', () => onChange(p));
-    wrap.appendChild(btn);
+    segGroup.appendChild(btn);
   }
 
+  const periodNav = document.createElement('div');
+  periodNav.className = 'period-nav';
+
   const prevBtn = document.createElement('button');
-  prevBtn.className = 'period-nav';
+  prevBtn.className = 'nav-btn';
   prevBtn.textContent = '←';
   prevBtn.addEventListener('click', () => onPrev());
 
@@ -111,12 +117,13 @@ function renderTabs(
   label.textContent = formatPeriodLabel(current, referenceDate);
 
   const nextBtn = document.createElement('button');
-  nextBtn.className = 'period-nav';
+  nextBtn.className = 'nav-btn';
   nextBtn.textContent = '→';
   nextBtn.addEventListener('click', () => onNext());
 
-  wrap.append(prevBtn, label, nextBtn);
-  root.appendChild(wrap);
+  periodNav.append(prevBtn, label, nextBtn);
+
+  root.append(segGroup, periodNav);
 }
 
 function renderGroups(root: HTMLElement, groups: GroupedMeeting[]): void {
@@ -172,36 +179,59 @@ function renderGroups(root: HTMLElement, groups: GroupedMeeting[]): void {
       const end = s.endTime ? new Date(s.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '…';
       timeEl.textContent = `${start} – ${end}`;
 
-      const editEl = document.createElement('div');
-      editEl.className = 'session-edit';
-      const titleIn = document.createElement('input');
-      titleIn.value = s.title ?? '';
-      titleIn.placeholder = 'Title';
-      titleIn.addEventListener('change', async () => {
-        await updateSession(s.id, { title: titleIn.value || null });
+      const editBtn = document.createElement('button');
+      editBtn.className = 'edit-btn';
+      editBtn.setAttribute('aria-label', 'Edit session');
+      editBtn.textContent = '✎';
+      editBtn.addEventListener('click', () => {
+        openEditSessionId = openEditSessionId === s.id ? null : s.id;
+        renderGroups(root, groups);
       });
-      const tagIn = document.createElement('input');
-      tagIn.value = s.projectTag ?? '';
-      tagIn.placeholder = 'Tag';
-      tagIn.addEventListener('change', async () => {
-        await updateSession(s.id, { projectTag: tagIn.value || null });
-      });
-      editEl.append(titleIn, tagIn);
 
-      if (s.endTime === null) {
-        const endIn = document.createElement('input');
-        endIn.type = 'datetime-local';
-        endIn.addEventListener('change', async () => {
-          const v = endIn.valueAsNumber;
-          if (!isNaN(v)) {
-            await updateSession(s.id, { endTime: v });
-          }
-        });
-        editEl.appendChild(endIn);
-      }
-
-      sRow.append(timeEl, durEl, editEl);
+      sRow.append(timeEl, durEl, editBtn);
       sessionsEl.appendChild(sRow);
+
+      if (openEditSessionId === s.id) {
+        const editPanel = document.createElement('div');
+        editPanel.className = 'edit-panel';
+
+        const titleIn = document.createElement('input');
+        titleIn.value = s.title ?? '';
+        titleIn.placeholder = 'Title';
+
+        const tagIn = document.createElement('input');
+        tagIn.value = s.projectTag ?? '';
+        tagIn.placeholder = 'Tag';
+
+        editPanel.append(titleIn, tagIn);
+
+        let endIn: HTMLInputElement | null = null;
+        if (s.endTime === null) {
+          endIn = document.createElement('input');
+          endIn.type = 'datetime-local';
+          editPanel.appendChild(endIn);
+        }
+
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'save-btn';
+        saveBtn.textContent = 'Save';
+        saveBtn.addEventListener('click', async () => {
+          const updates: Partial<MeetingSession> = {
+            title: titleIn.value || null,
+            projectTag: tagIn.value || null,
+          };
+          if (endIn !== null) {
+            const v = endIn.valueAsNumber;
+            if (!isNaN(v)) updates.endTime = v;
+          }
+          await updateSession(s.id, updates);
+          openEditSessionId = null;
+          await refreshHistory?.();
+        });
+        editPanel.appendChild(saveBtn);
+
+        sessionsEl.appendChild(editPanel);
+      }
     }
 
     groupEl.append(row, sessionsEl);
@@ -242,6 +272,10 @@ export async function init(): Promise<void> {
   const rangeNav = document.getElementById('range');
   if (!app || !rangeNav) return;
 
+  const page = document.createElement('div');
+  page.className = 'page';
+  rangeNav.replaceWith(page);
+
   let preset: RangePreset = 'day';
 
   const exportBtn = document.createElement('button');
@@ -260,9 +294,7 @@ export async function init(): Promise<void> {
     setTimeout(() => { exportBtn.textContent = 'Export'; }, 1500);
   });
 
-  if (app.parentElement) {
-    app.parentElement.insertBefore(exportBtn, app);
-  }
+  page.append(rangeNav, exportBtn, app);
 
   const doRender = async () => {
     const sessions = await getAllSessions();
@@ -292,6 +324,7 @@ export async function init(): Promise<void> {
     renderGroups(app, groups);
   };
 
+  refreshHistory = doRender;
   await doRender();
 }
 
