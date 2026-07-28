@@ -39,7 +39,8 @@ body {
   font-size: 13px;
 }
 
-.dev-toggle {
+.dev-toggle,
+.notif-toggle {
   border: none;
   background: transparent;
   color: var(--fg-muted);
@@ -50,9 +51,14 @@ body {
   border-radius: 4px;
 }
 
-.dev-toggle:hover {
+.dev-toggle:hover,
+.notif-toggle:hover {
   background: var(--bg-open);
   color: var(--fg);
+}
+
+.notif-toggle.is-off {
+  opacity: 0.4;
 }
 
 .dev-bar {
