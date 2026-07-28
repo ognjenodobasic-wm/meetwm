@@ -221,6 +221,12 @@ function renderGroups(root: HTMLElement, groups: GroupedMeeting[]): void {
         const saveBtn = document.createElement('button');
         saveBtn.className = 'save-btn';
         saveBtn.textContent = 'Save';
+
+        const validationMsg = document.createElement('span');
+        validationMsg.className = 'validation-msg';
+        validationMsg.style.color = 'var(--color-warning, #c00)';
+        validationMsg.style.fontSize = '0.85em';
+
         saveBtn.addEventListener('click', async () => {
           const updates: Partial<MeetingSession> = {
             title: titleIn.value || null,
@@ -228,13 +234,20 @@ function renderGroups(root: HTMLElement, groups: GroupedMeeting[]): void {
           };
           if (endIn !== null) {
             const v = endIn.valueAsNumber;
-            if (!isNaN(v)) updates.endTime = v;
+            if (!isNaN(v)) {
+              if (v <= s.startTime) {
+                validationMsg.textContent = 'End time must be after start time.';
+                return;
+              }
+              updates.endTime = v;
+            }
           }
+          validationMsg.textContent = '';
           await updateSession(s.id, updates);
           openEditSessionId = null;
           await refreshHistory?.();
         });
-        editPanel.appendChild(saveBtn);
+        editPanel.append(saveBtn, validationMsg);
 
         sessionsEl.appendChild(editPanel);
       }
