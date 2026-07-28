@@ -3,10 +3,24 @@
   "name": "MeetWM",
   "version": "0.1.0",
   "description": "Logs your own join/leave times on Google Meet calls, locally.",
-  "permissions": ["storage", "activeTab"],
+  "permissions": ["storage", "activeTab", "notifications"],
+  "icons": {
+    "16": "public/icon16.png",
+    "48": "public/icon48.png",
+    "128": "public/icon128.png"
+  },
   "action": {
     "default_title": "MeetWM",
-    "default_popup": "src/popup/popup.html"
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "public/icon16.png",
+      "48": "public/icon48.png",
+      "128": "public/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "dist/background/background.js",
+    "type": "module"
   },
   "content_scripts": [
     {
