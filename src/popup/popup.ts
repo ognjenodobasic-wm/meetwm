@@ -66,8 +66,34 @@ function renderHeader(): HTMLElement {
   date.className = 'header-date';
   date.textContent = formatHeaderDate();
 
-  header.append(left, date);
+  const devToggle = document.createElement('button');
+  devToggle.id = 'dev-toggle';
+  devToggle.className = 'dev-toggle';
+  devToggle.setAttribute('aria-label', 'Dev tools');
+  devToggle.textContent = '⚙';
+
+  header.append(left, date, devToggle);
   return header;
+}
+
+function renderDevBar(): HTMLElement {
+  const bar = document.createElement('div');
+  bar.id = 'dev-bar';
+  bar.className = 'dev-bar is-hidden';
+
+  const seedBtn = document.createElement('button');
+  seedBtn.id = 'seed-btn';
+  seedBtn.textContent = 'Seed dummy data';
+
+  const clearBtn = document.createElement('button');
+  clearBtn.id = 'clear-btn';
+  clearBtn.textContent = 'Clear all data';
+
+  const status = document.createElement('span');
+  status.id = 'dev-status';
+
+  bar.append(seedBtn, clearBtn, status);
+  return bar;
 }
 
 function renderSessionRow(s: GroupedMeeting['sessions'][number]): HTMLElement {
@@ -169,6 +195,7 @@ async function renderApp(): Promise<void> {
 
   app.replaceChildren();
   app.append(renderHeader());
+  app.append(renderDevBar());
   for (const group of groups) {
     app.append(renderGroup(group));
     const separator = document.createElement('hr');
