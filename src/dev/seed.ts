@@ -11,7 +11,7 @@ function makeId(): string {
   return crypto.randomUUID();
 }
 
-async function seedDummyData(): Promise<void> {
+export async function seedDummyData(): Promise<void> {
   const now = new Date();
   const today = dateKeyFromDate(now);
   const twoDaysAgoDate = new Date(now);
@@ -103,26 +103,6 @@ async function seedDummyData(): Promise<void> {
   }
 }
 
-async function clearAllData(): Promise<void> {
+export async function clearAllData(): Promise<void> {
   await chrome.storage.local.remove(SESSIONS_KEY);
-}
-
-const statusEl = document.getElementById('status');
-const seedBtn = document.getElementById('seed-btn');
-const clearBtn = document.getElementById('clear-btn');
-
-if (
-  statusEl instanceof HTMLParagraphElement &&
-  seedBtn instanceof HTMLButtonElement &&
-  clearBtn instanceof HTMLButtonElement
-) {
-  seedBtn.addEventListener('click', async () => {
-    await seedDummyData();
-    statusEl.textContent = 'Seeded 8 sessions.';
-  });
-
-  clearBtn.addEventListener('click', async () => {
-    await clearAllData();
-    statusEl.textContent = 'Cleared.';
-  });
 }
