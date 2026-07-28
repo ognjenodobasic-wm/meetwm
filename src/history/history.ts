@@ -45,7 +45,7 @@ function periodBounds(preset: RangePreset, referenceDate: Date): { from: Date; t
     const day = referenceDate.getDay();
     const diff = referenceDate.getDate() - day + (day === 0 ? -6 : 1);
     const mon = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), diff);
-    const sun = new Date(mon.getTime() + 6 * 24 * 60 * 60 * 1000);
+    const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
     return { from: mon, to: sun };
   }
   const first = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
