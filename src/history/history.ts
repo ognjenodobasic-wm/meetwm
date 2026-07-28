@@ -149,7 +149,13 @@ function renderGroups(root: HTMLElement, groups: GroupedMeeting[]): void {
       meta.classList.add('is-warning');
       meta.textContent = `nezavršeno (${group.sessionCount})`;
     } else {
-      meta.textContent = `${group.uiLabel} (${group.sessionCount})`;
+      const count = document.createElement('span');
+      count.className = 'group-count';
+      count.textContent = `(${group.sessionCount})`;
+      const time = document.createElement('span');
+      time.className = 'group-time';
+      time.textContent = group.uiLabel;
+      meta.append(count, time);
     }
     const chevron = document.createElement('span');
     chevron.className = 'chevron';
