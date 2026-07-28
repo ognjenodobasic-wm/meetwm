@@ -294,7 +294,11 @@ export async function init(): Promise<void> {
     setTimeout(() => { exportBtn.textContent = 'Export'; }, 1500);
   });
 
-  page.append(rangeNav, exportBtn, app);
+  const toolbar = document.createElement('div');
+  toolbar.className = 'toolbar';
+  toolbar.append(rangeNav, exportBtn);
+
+  page.append(toolbar, app);
 
   const doRender = async () => {
     const sessions = await getAllSessions();
