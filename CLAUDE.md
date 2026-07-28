@@ -8,7 +8,7 @@ MeetWM — Chrome Manifest V3 extension that logs the user's own join/leave time
 Google Meet calls to `chrome.storage.local`, and shows them in a toolbar popup
 (today) and a full-page history view (day/week/month, manual edits, export).
 
-Authoritative spec: `MEETWM-SPEC-v1.1.md`. Read it before changing behaviour —
+Authoritative spec: `MEETWM-SPEC-v1.3.md`. Read it before changing behaviour —
 section refs (§3 data model, §4 detection, §5 UI, §7 decisions) are cited in code
 comments. No backend, no auth, single user, local only.
 
@@ -65,7 +65,7 @@ for different meetings the same day. Grouping is view-layer only.
 
 **Never guess a duration.** `endTime: null` means the session was never closed
 cleanly; show it flagged and let the user fix it. Duration is never stored — it is
-computed from `startTime`/`endTime` at display time, `H:MM` for the UI and decimal
+computed from `startTime`/`endTime` at display time, `Xh Ym` for the UI and decimal
 hours for export.
 
 **The content script is not an ES module.** MV3 content scripts load as classic
@@ -86,6 +86,6 @@ Dev-only seed/clear utility lives inside the popup as a collapsed dev bar (toggl
 
 ## Permissions
 
-`storage` + `activeTab` only. The broader `tabs` permission is not needed — the
+`storage` + `activeTab` + `notifications`. The broader `tabs` permission is not needed — the
 content script matches `*://meet.google.com/*` directly. Do not widen permissions
 without a matching spec update.
