@@ -154,7 +154,7 @@ function renderGroups(root: HTMLElement, groups: GroupedMeeting[]): void {
     const chevron = document.createElement('span');
     chevron.className = 'chevron';
     chevron.textContent = '▾';
-    row.append(title, meta, chevron);
+    row.append(chevron, title, meta);
     row.addEventListener('click', () => {
       openGroupIndex = openGroupIndex === gi ? -1 : gi;
       renderGroups(root, groups);
