@@ -3,6 +3,7 @@ import {
   formatDuration,
   type GroupedMeeting,
 } from '../shared/grouping.js';
+import { clearAllData, seedDummyData } from '../dev/seed.js';
 import { getAllSessions } from '../shared/storage.js';
 
 /**
@@ -185,6 +186,46 @@ function renderFooter(groups: GroupedMeeting[]): HTMLElement {
   return footer;
 }
 
+function wireDevBar(): void {
+  const toggle = document.getElementById('dev-toggle');
+  const bar = document.getElementById('dev-bar');
+  const seedBtn = document.getElementById('seed-btn');
+  const clearBtn = document.getElementById('clear-btn');
+  const status = document.getElementById('dev-status');
+
+  if (
+    !(toggle instanceof HTMLButtonElement) ||
+    !(bar instanceof HTMLDivElement) ||
+    !(seedBtn instanceof HTMLButtonElement) ||
+    !(clearBtn instanceof HTMLButtonElement) ||
+    !(status instanceof HTMLSpanElement)
+  ) {
+    return;
+  }
+
+  toggle.addEventListener('click', () => {
+    bar.classList.toggle('is-hidden');
+  });
+
+  seedBtn.addEventListener('click', async () => {
+    await seedDummyData();
+    await renderApp();
+    const nextStatus = document.getElementById('dev-status');
+    if (nextStatus instanceof HTMLSpanElement) {
+      nextStatus.textContent = 'Seeded.';
+    }
+  });
+
+  clearBtn.addEventListener('click', async () => {
+    await clearAllData();
+    await renderApp();
+    const nextStatus = document.getElementById('dev-status');
+    if (nextStatus instanceof HTMLSpanElement) {
+      nextStatus.textContent = 'Cleared.';
+    }
+  });
+}
+
 async function renderApp(): Promise<void> {
   const app = document.getElementById('app');
   if (app === null) return;
@@ -203,6 +244,7 @@ async function renderApp(): Promise<void> {
     app.append(separator);
   }
   app.append(renderFooter(groups));
+  wireDevBar();
 }
 
 export function init(): void {
