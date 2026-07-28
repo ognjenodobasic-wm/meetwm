@@ -1,30 +1,26 @@
 import type { MeetingSession } from './types.js';
 
-/** Single `chrome.storage.local` key holding the flat session log. */
-export const SESSIONS_KEY = 'sessions';
-
-/** Reads the whole flat log. Returns `[]` when nothing has been stored yet. */
+/** Reads all per-session keys and returns them as a flat array. */
 export async function getAllSessions(): Promise<MeetingSession[]> {
-  const stored = await chrome.storage.local.get(SESSIONS_KEY);
-  return (stored[SESSIONS_KEY] as MeetingSession[] | undefined) ?? [];
+  const all = await chrome.storage.local.get(null);
+  return Object.entries(all)
+    .filter(([key]) => key.startsWith('session:'))
+    .map(([, value]) => value as MeetingSession);
 }
 
-/** Appends one session and persists the full array back to storage. */
+/** Writes a single session to its own key. */
 export async function saveSession(session: MeetingSession): Promise<void> {
-  const sessions = await getAllSessions();
-  sessions.push(session);
-  await chrome.storage.local.set({ [SESSIONS_KEY]: sessions });
+  await chrome.storage.local.set({ [`session:${session.id}`]: session });
 }
 
-/** Finds a session by id and merges the updates (manual correction path, spec §5). */
+/** Reads one session by id, merges updates, writes back only that key. */
 export async function updateSession(
   id: string,
   updates: Partial<MeetingSession>,
 ): Promise<void> {
-  const sessions = await getAllSessions();
-  const index = sessions.findIndex((session) => session.id === id);
-  const existing = sessions[index];
+  const key = `session:${id}`;
+  const stored = await chrome.storage.local.get(key);
+  const existing = stored[key] as MeetingSession | undefined;
   if (existing === undefined) return;
-  sessions[index] = { ...existing, ...updates, id: existing.id };
-  await chrome.storage.local.set({ [SESSIONS_KEY]: sessions });
+  await chrome.storage.local.set({ [key]: { ...existing, ...updates, id: existing.id } });
 }
