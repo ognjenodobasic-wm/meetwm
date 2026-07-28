@@ -63,6 +63,9 @@ function renderHeader(): HTMLElement {
   title.textContent = 'MeetWM';
   left.append(icon, title);
 
+  const right = document.createElement('div');
+  right.className = 'header-right';
+
   const date = document.createElement('span');
   date.className = 'header-date';
   date.textContent = formatHeaderDate();
@@ -73,7 +76,9 @@ function renderHeader(): HTMLElement {
   devToggle.setAttribute('aria-label', 'Dev tools');
   devToggle.textContent = '⚙';
 
-  header.append(left, date, devToggle);
+  right.append(date, devToggle);
+
+  header.append(left, right);
   return header;
 }
 
