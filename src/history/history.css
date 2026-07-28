@@ -63,10 +63,20 @@ body {
 .session-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 8px;
   padding: 4px 0;
   font-size: 13px;
+}
+
+.session-row > span:first-child {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.session-duration {
+  width: 56px;
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .session-duration.is-warning {
@@ -79,21 +89,78 @@ body {
   margin: 6px 0;
 }
 
-.period-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 12px;
-  border-bottom: 1px solid var(--border);
+.page {
+  padding: 2rem 2.5rem;
 }
 
-.filter-bar {
-  padding: 8px 12px;
+.seg-group {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  background: var(--bg-muted, #f1f3f4);
+  border-radius: 8px;
 }
 
-.session-edit {
+.seg {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 13px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.seg.active {
+  background: var(--bg);
+  color: var(--fg);
+  font-weight: 500;
+}
+
+.period-nav {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 12px 0;
+}
+
+.nav-btn,
+.edit-btn {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+}
+
+.nav-btn:hover,
+.edit-btn:hover {
+  background: var(--bg-open, #f1f3f4);
+  color: var(--fg);
+}
+
+.period-label {
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+
+.edit-btn {
+  margin-left: auto;
+}
+
+.edit-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0 6px 12px;
+}
+
+.save-btn {
+  padding: 4px 10px;
+  cursor: pointer;
 }
 
 .export-button {
