@@ -33,6 +33,36 @@ body {
   font-size: 13px;
 }
 
+.dev-toggle {
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+.dev-toggle:hover {
+  background: var(--bg-open);
+  color: var(--fg);
+}
+
+.dev-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+
+.dev-bar.is-hidden {
+  display: none;
+}
+
 .group {
   background: var(--bg);
 }
