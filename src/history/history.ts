@@ -271,6 +271,13 @@ function filterSessions(
   return sessions.filter((s) => s.dateKey >= from && s.dateKey <= to);
 }
 
+function csvField(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
 /**
  * Per-session decimal hours, computed directly from that session's own
  * timestamps — not pulled from `GroupedMeeting.decimalHours`, which is a
@@ -281,7 +288,7 @@ export function exportSessions(sessions: MeetingSession[]): string {
     .filter((s) => s.endTime !== null)
     .map((s) => {
       const hours = Math.round(((s.endTime! - s.startTime) / 3_600_000) * 100) / 100;
-      return `${s.dateKey},${s.meetingCode},${s.title ?? ''},${hours}`;
+      return [csvField(s.dateKey), csvField(s.meetingCode), csvField(s.title ?? ''), csvField(String(hours))].join(',');
     })
     .join('\n');
 }
