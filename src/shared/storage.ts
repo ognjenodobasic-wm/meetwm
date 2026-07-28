@@ -24,3 +24,17 @@ export async function updateSession(
   if (existing === undefined) return;
   await chrome.storage.local.set({ [key]: { ...existing, ...updates, id: existing.id } });
 }
+
+const SETTINGS_KEY = 'settings';
+
+export async function getNotificationsEnabled(): Promise<boolean> {
+  const stored = await chrome.storage.local.get(SETTINGS_KEY);
+  const settings = stored[SETTINGS_KEY] as { notificationsEnabled?: boolean } | undefined;
+  return settings?.notificationsEnabled ?? true;
+}
+
+export async function setNotificationsEnabled(enabled: boolean): Promise<void> {
+  const stored = await chrome.storage.local.get(SETTINGS_KEY);
+  const settings = (stored[SETTINGS_KEY] as object | undefined) ?? {};
+  await chrome.storage.local.set({ [SETTINGS_KEY]: { ...settings, notificationsEnabled: enabled } });
+}
