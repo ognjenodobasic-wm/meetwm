@@ -5,8 +5,9 @@ description: End-of-day wrap-up for MeetWM — review the day's changes, update 
 
 # /eod — end of day
 
-Mikro tier: the CHANGELOG entry **is** the state-of-the-project record. There is no
-ROADMAP to update.
+Mikro tier: the CHANGELOG entry is the detailed state-of-the-project record;
+`docs/ROADMAP.md` is the short status-at-a-glance (frontmatter + Sada) and gets
+updated too (step 2a below).
 
 ## 1. Review what changed
 
@@ -40,6 +41,12 @@ Add one dated entry at the top, under the header, newest first:
 Only include sections that have content. Write what changed for the user of the
 extension, not a list of touched files. Bump the version in `manifest.json` and
 `package.json` together if this wraps a releasable change — they must stay equal.
+
+## 2a. Update docs/ROADMAP.md
+
+Rewrite the `## Sada` section (max 10 lines: branch, file, next concrete step) and
+the frontmatter (`updated`, `last_done`, `next_step`, `state`) to match what just
+happened. Use only facts from git log / the diff — never invent a plan.
 
 ## 3. Typecheck
 
