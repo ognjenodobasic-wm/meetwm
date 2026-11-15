@@ -34,8 +34,9 @@ from GitHub with a manual reload — there is no Web Store release.
 - **No runtime npm dependencies.** Only `typescript` and `@types/chrome` as
   devDependencies. Adding one reopens the no-bundler decision (spec §7).
 - `strict: true` stays on.
-- Mikro tier: only `CLAUDE.md` and `CHANGELOG.md`. Do not add `ROADMAP.md`,
-  `LESSONS.md`, `BUGS.md`, `ARCHITECTURE.md`, or `.claude/agents/`.
+- Mikro tier: only `CLAUDE.md`, `CHANGELOG.md`, and `docs/ROADMAP.md` (status
+  contract). Do not add `LESSONS.md`, `BUGS.md`, `ARCHITECTURE.md`, or
+  `.claude/agents/`.
 
 ## Layout
 
